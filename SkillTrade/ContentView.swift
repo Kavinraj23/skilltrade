@@ -7,15 +7,10 @@
 
 import SwiftUI
 
+// ContentView is kept as a thin alias so the Xcode preview target continues to compile.
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        RoleSelectionView()
     }
 }
 

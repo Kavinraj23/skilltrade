@@ -1,40 +1,44 @@
 import Foundation
+import FirebaseFirestore
 
 // MARK: - MockDataService
-// Single source of truth for all hardcoded data.
-// Replace these methods with Firestore calls to swap in Firebase later.
+// Hardcoded data used for previews and the keyword resolver.
+// All live data now comes from FirestoreService — this file is kept only
+// for SwiftUI previews and the resolveCategory helper.
 
 final class MockDataService {
 
     static let shared = MockDataService()
     private init() {}
 
-    // MARK: - Users
+    // MARK: - Stable String IDs
+
+    private let p1 = "provider-001"
+    private let p2 = "provider-002"
+    private let p3 = "provider-003"
+    private let p4 = "provider-004"
+    private let p5 = "provider-005"
+    private let p6 = "provider-006"
+    private let p7 = "provider-007"
+    private let p8 = "provider-008"
+
+    // MARK: - Preview Users
 
     let homeowner = User(
-        id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+        id: "homeowner-001",
         name: "Alex Johnson",
+        email: "alex@example.com",
         role: .homeowner
     )
 
     let providerUser = User(
-        id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+        id: "provider-001",
         name: "Marco Rivera",
+        email: "marco@example.com",
         role: .provider
     )
 
-    // MARK: - Provider IDs (stable so bookings/reviews can reference them)
-
-    private let p1 = UUID(uuidString: "10000000-0000-0000-0000-000000000001")!
-    private let p2 = UUID(uuidString: "10000000-0000-0000-0000-000000000002")!
-    private let p3 = UUID(uuidString: "10000000-0000-0000-0000-000000000003")!
-    private let p4 = UUID(uuidString: "10000000-0000-0000-0000-000000000004")!
-    private let p5 = UUID(uuidString: "10000000-0000-0000-0000-000000000005")!
-    private let p6 = UUID(uuidString: "10000000-0000-0000-0000-000000000006")!
-    private let p7 = UUID(uuidString: "10000000-0000-0000-0000-000000000007")!
-    private let p8 = UUID(uuidString: "10000000-0000-0000-0000-000000000008")!
-
-    // MARK: - Providers
+    // MARK: - Preview Providers
 
     lazy var providers: [Provider] = [
         Provider(
@@ -44,9 +48,9 @@ final class MockDataService {
             services: ["Leak Repair", "Pipe Installation", "Drain Cleaning"],
             bio: "15 years of residential and commercial plumbing across the Bay Area. Licensed and insured.",
             city: "San Jose",
+            category: .plumber,
             averageRating: 4.8,
-            reviewCount: 3,
-            category: .plumber
+            reviewCount: 3
         ),
         Provider(
             id: p2,
@@ -55,9 +59,9 @@ final class MockDataService {
             services: ["Water Heater Install", "Pipe Repair", "Bathroom Remodel"],
             bio: "Family-run business since 1998. We treat every home like our own.",
             city: "Oakland",
+            category: .plumber,
             averageRating: 4.5,
-            reviewCount: 2,
-            category: .plumber
+            reviewCount: 2
         ),
         Provider(
             id: p3,
@@ -66,9 +70,9 @@ final class MockDataService {
             services: ["Panel Upgrades", "Outlet Installation", "Lighting"],
             bio: "Master electrician with 10+ years of experience. Safety-first approach on every job.",
             city: "San Francisco",
+            category: .electrician,
             averageRating: 4.9,
-            reviewCount: 3,
-            category: .electrician
+            reviewCount: 3
         ),
         Provider(
             id: p4,
@@ -77,9 +81,9 @@ final class MockDataService {
             services: ["Rewiring", "EV Charger Install", "Troubleshooting"],
             bio: "Specializing in modern smart-home wiring and EV infrastructure.",
             city: "Fremont",
+            category: .electrician,
             averageRating: 4.6,
-            reviewCount: 2,
-            category: .electrician
+            reviewCount: 2
         ),
         Provider(
             id: p5,
@@ -88,9 +92,9 @@ final class MockDataService {
             services: ["AC Install", "Furnace Repair", "Duct Cleaning"],
             bio: "Certified HVAC technician. We keep you cool in summer and warm in winter.",
             city: "Santa Clara",
+            category: .hvac,
             averageRating: 4.7,
-            reviewCount: 3,
-            category: .hvac
+            reviewCount: 3
         ),
         Provider(
             id: p6,
@@ -99,9 +103,9 @@ final class MockDataService {
             services: ["Shingle Replacement", "Leak Inspection", "Gutter Repair"],
             bio: "Licensed roofer with 20 years in the trade. Every job comes with a 5-year warranty.",
             city: "Sunnyvale",
+            category: .roofer,
             averageRating: 4.4,
-            reviewCount: 2,
-            category: .roofer
+            reviewCount: 2
         ),
         Provider(
             id: p7,
@@ -110,9 +114,9 @@ final class MockDataService {
             services: ["Furniture Assembly", "Drywall Repair", "Painting"],
             bio: "No job too small. Available weekends and evenings.",
             city: "Berkeley",
+            category: .handyman,
             averageRating: 4.3,
-            reviewCount: 3,
-            category: .handyman
+            reviewCount: 3
         ),
         Provider(
             id: p8,
@@ -121,112 +125,40 @@ final class MockDataService {
             services: ["General Repairs", "Carpentry", "Door & Window Fixes"],
             bio: "Jack of all trades, master of getting things done right the first time.",
             city: "Palo Alto",
+            category: .handyman,
             averageRating: 4.6,
-            reviewCount: 2,
-            category: .handyman
+            reviewCount: 2
         )
     ]
 
-    // MARK: - Reviews
+    // MARK: - Preview Reviews
 
     lazy var reviews: [Review] = [
-        // Rivera Plumbing (p1)
-        Review(id: UUID(), providerId: p1, homeownerName: "Alex J.", rating: 5, comment: "Fixed our leak in under an hour. Super professional."),
-        Review(id: UUID(), providerId: p1, homeownerName: "Beth T.", rating: 5, comment: "Arrived on time, clean work, fair price."),
-        Review(id: UUID(), providerId: p1, homeownerName: "Carlos M.", rating: 4, comment: "Great service, just a little pricey."),
-
-        // Park & Sons (p2)
-        Review(id: UUID(), providerId: p2, homeownerName: "Diana L.", rating: 5, comment: "Replaced our water heater quickly and efficiently."),
-        Review(id: UUID(), providerId: p2, homeownerName: "Evan R.", rating: 4, comment: "Good work, friendly crew."),
-
-        // Bright Wire (p3)
-        Review(id: UUID(), providerId: p3, homeownerName: "Fiona K.", rating: 5, comment: "Upgraded our panel seamlessly. Very knowledgeable."),
-        Review(id: UUID(), providerId: p3, homeownerName: "George P.", rating: 5, comment: "Installed 6 outlets in one afternoon. Impressed."),
-        Review(id: UUID(), providerId: p3, homeownerName: "Hannah S.", rating: 5, comment: "Best electrician I've ever hired."),
-
-        // Torres Electric (p4)
-        Review(id: UUID(), providerId: p4, homeownerName: "Ivan N.", rating: 5, comment: "EV charger installed perfectly. Highly recommend."),
-        Review(id: UUID(), providerId: p4, homeownerName: "Julia W.", rating: 4, comment: "Smart and efficient. Prices are fair."),
-
-        // Cool Comfort (p5)
-        Review(id: UUID(), providerId: p5, homeownerName: "Kevin O.", rating: 5, comment: "AC is ice cold again. Life saver."),
-        Review(id: UUID(), providerId: p5, homeownerName: "Laura H.", rating: 5, comment: "Fast turnaround on furnace repair."),
-        Review(id: UUID(), providerId: p5, homeownerName: "Mike Z.", rating: 4, comment: "Good job, communicated well throughout."),
-
-        // Kim Roofing (p6)
-        Review(id: UUID(), providerId: p6, homeownerName: "Nancy B.", rating: 4, comment: "Fixed the leak before the next rainstorm. Thank you!"),
-        Review(id: UUID(), providerId: p6, homeownerName: "Oscar F.", rating: 5, comment: "Replaced all shingles in one day. Spotless cleanup."),
-
-        // Brown's Handyman (p7)
-        Review(id: UUID(), providerId: p7, homeownerName: "Paula G.", rating: 4, comment: "Assembled my IKEA furniture without complaint."),
-        Review(id: UUID(), providerId: p7, homeownerName: "Quinn A.", rating: 4, comment: "Painted the living room beautifully."),
-        Review(id: UUID(), providerId: p7, homeownerName: "Rachel D.", rating: 5, comment: "Patched drywall — you can't even tell it was damaged."),
-
-        // Wells All-Around (p8)
-        Review(id: UUID(), providerId: p8, homeownerName: "Steve C.", rating: 5, comment: "Fixed squeaky doors and stuck windows in one visit."),
-        Review(id: UUID(), providerId: p8, homeownerName: "Tina M.", rating: 4, comment: "Solid carpenter, very punctual.")
+        Review(id: "r1",  homeownerId: "homeowner-001", homeownerName: "Alex J.",   rating: 5, comment: "Fixed our leak in under an hour. Super professional."),
+        Review(id: "r2",  homeownerId: "homeowner-001", homeownerName: "Beth T.",   rating: 5, comment: "Arrived on time, clean work, fair price."),
+        Review(id: "r3",  homeownerId: "homeowner-001", homeownerName: "Carlos M.", rating: 4, comment: "Great service, just a little pricey.")
     ]
 
-    // MARK: - Bookings (in-memory, mutable)
+    // MARK: - Preview Bookings
 
     lazy var bookings: [Booking] = {
-        let calendar = Calendar.current
-        let tomorrow   = calendar.date(byAdding: .day, value: 1,  to: Date())!
-        let nextWeek   = calendar.date(byAdding: .day, value: 7,  to: Date())!
-        let lastWeek   = calendar.date(byAdding: .day, value: -7, to: Date())!
-        let homeownerId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let tomorrow  = Calendar.current.date(byAdding: .day, value: 1,  to: Date())!
+        let nextWeek  = Calendar.current.date(byAdding: .day, value: 7,  to: Date())!
+        let lastWeek  = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
         return [
-            Booking(
-                id: UUID(),
-                homeownerId: homeownerId,
-                providerId: p1,
-                service: "Leak Repair",
-                description: "Kitchen faucet dripping constantly.",
-                status: .confirmed,
-                scheduledDate: tomorrow
-            ),
-            Booking(
-                id: UUID(),
-                homeownerId: homeownerId,
-                providerId: p3,
-                service: "Outlet Installation",
-                description: "Need two new outlets in the garage.",
-                status: .pending,
-                scheduledDate: nextWeek
-            ),
-            Booking(
-                id: UUID(),
-                homeownerId: homeownerId,
-                providerId: p5,
-                service: "AC Install",
-                description: "Replace old window unit with mini-split.",
-                status: .completed,
-                scheduledDate: lastWeek
-            )
+            Booking(id: "b1", homeownerId: "homeowner-001", providerId: p1,
+                    service: "Leak Repair",        description: "Kitchen faucet dripping.",
+                    status: .confirmed,  scheduledDate: tomorrow),
+            Booking(id: "b2", homeownerId: "homeowner-001", providerId: p3,
+                    service: "Outlet Installation", description: "Two new outlets in garage.",
+                    status: .pending,    scheduledDate: nextWeek),
+            Booking(id: "b3", homeownerId: "homeowner-001", providerId: p5,
+                    service: "AC Install",          description: "Replace window unit with mini-split.",
+                    status: .completed,  scheduledDate: lastWeek)
         ]
     }()
 
-    // MARK: - Helpers
-
-    func providers(for category: ServiceCategory) -> [Provider] {
-        providers.filter { $0.category == category }
-    }
-
-    func reviews(for providerId: UUID) -> [Review] {
-        reviews.filter { $0.providerId == providerId }
-    }
-
-    func bookings(forHomeowner homeownerId: UUID) -> [Booking] {
-        bookings.filter { $0.homeownerId == homeownerId }
-    }
-
-    func bookings(forProvider providerId: UUID) -> [Booking] {
-        bookings.filter { $0.providerId == providerId }
-    }
-
-    func provider(for booking: Booking) -> Provider? {
-        providers.first { $0.id == booking.providerId }
-    }
+    // MARK: - Keyword → Category resolver (used by HomeownerViewModel)
 
     func resolveCategory(from query: String) -> ServiceCategory {
         let q = query.lowercased()

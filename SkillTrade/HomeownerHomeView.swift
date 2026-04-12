@@ -6,17 +6,14 @@ struct HomeownerHomeView: View {
 
     var body: some View {
         List {
-            // Search
+            // Search bar
             Section {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
                     TextField("Describe your problem...", text: $vm.searchQuery)
                         .submitLabel(.search)
-                        .onSubmit {
-                            vm.search()
-                            navigateToResults = true
-                        }
+                        .onSubmit { runSearch() }
                     if !vm.searchQuery.isEmpty {
                         Button {
                             vm.searchQuery = ""
@@ -37,16 +34,18 @@ struct HomeownerHomeView: View {
 
             // Search button
             Section {
-                Button {
-                    vm.search()
-                    navigateToResults = true
-                } label: {
-                    Text("Find Help")
-                        .frame(maxWidth: .infinity)
-                        .fontWeight(.semibold)
+                Button { runSearch() } label: {
+                    Group {
+                        if vm.isLoading {
+                            ProgressView()
+                        } else {
+                            Text("Find Help").fontWeight(.semibold)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(vm.searchQuery.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(vm.searchQuery.trimmingCharacters(in: .whitespaces).isEmpty || vm.isLoading)
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
@@ -65,8 +64,24 @@ struct HomeownerHomeView: View {
             }
         }
         .navigationDestination(isPresented: $navigateToResults) {
-            SearchResultsView()
-                .environmentObject(vm)
+            SearchResultsView().environmentObject(vm)
+        }
+        .alert("Error", isPresented: Binding(
+            get: { vm.errorMessage != nil },
+            set: { if !$0 { vm.errorMessage = nil } }
+        )) {
+            Button("OK") { vm.errorMessage = nil }
+        } message: {
+            Text(vm.errorMessage ?? "")
+        }
+    }
+
+    private func runSearch() {
+        Task {
+            await vm.search()
+            if !vm.searchResults.isEmpty {
+                navigateToResults = true
+            }
         }
     }
 }
@@ -102,6 +117,7 @@ struct StatusBadge: View {
         case .pending:   return "Pending"
         case .confirmed: return "Confirmed"
         case .completed: return "Completed"
+        case .declined:  return "Declined"
         }
     }
 
@@ -110,6 +126,7 @@ struct StatusBadge: View {
         case .pending:   return .yellow
         case .confirmed: return .green
         case .completed: return .gray
+        case .declined:  return .red
         }
     }
 
@@ -122,13 +139,5 @@ struct StatusBadge: View {
             .background(color.opacity(0.2))
             .foregroundStyle(color)
             .clipShape(Capsule())
-    }
-}
-
-#Preview {
-    NavigationStack {
-        HomeownerHomeView()
-            .environmentObject(HomeownerViewModel())
-            .navigationTitle("SkillTrade")
     }
 }

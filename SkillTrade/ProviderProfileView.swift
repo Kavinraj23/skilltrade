@@ -4,8 +4,7 @@ struct ProviderProfileView: View {
     @EnvironmentObject var vm: HomeownerViewModel
     let provider: Provider
     @State private var showBookingForm = false
-
-    var reviews: [Review] { vm.reviews(for: provider) }
+    @State private var reviews: [Review] = []
 
     var body: some View {
         List {
@@ -62,6 +61,7 @@ struct ProviderProfileView: View {
         }
         .navigationTitle(provider.businessName)
         .navigationBarTitleDisplayMode(.inline)
+        .task { reviews = await vm.reviews(for: provider) }
         .safeAreaInset(edge: .bottom) {
             Button {
                 showBookingForm = true

@@ -1,56 +1,84 @@
 import Foundation
 import Combine
+import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 final class HomeownerViewModel: ObservableObject {
 
-    private let data = MockDataService.shared
-    let currentUser: User
+    private let service = FirestoreService.shared
+    private var listenerHandle: ListenerRegistration?
 
-    @Published var bookings: [Booking]
+    @Published var bookings: [Booking] = []
     @Published var searchQuery: String = ""
     @Published var searchResults: [Provider] = []
     @Published var resolvedCategory: ServiceCategory = .handyman
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+
+    var currentUserId: String { Auth.auth().currentUser?.uid ?? "" }
 
     init() {
-        self.currentUser = MockDataService.shared.homeowner
-        self.bookings = MockDataService.shared.bookings(forHomeowner: MockDataService.shared.homeowner.id)
+        startBookingListener()
     }
 
-    // MARK: - Search
-
-    func search() {
-        guard !searchQuery.trimmingCharacters(in: .whitespaces).isEmpty else {
-            searchResults = []
-            return
-        }
-        resolvedCategory = data.resolveCategory(from: searchQuery)
-        searchResults = data.providers(for: resolvedCategory)
-    }
-
-    // MARK: - Reviews
-
-    func reviews(for provider: Provider) -> [Review] {
-        data.reviews(for: provider.id)
+    deinit {
+        listenerHandle?.remove()
     }
 
     // MARK: - Bookings
 
-    func addBooking(providerId: UUID, service: String, description: String, date: Date) {
+    private func startBookingListener() {
+        guard !currentUserId.isEmpty else { return }
+        listenerHandle = service.listenToBookings(forHomeowner: currentUserId) { [weak self] bookings in
+            self?.bookings = bookings
+        }
+    }
+
+    func addBooking(providerId: String, service: String, description: String, date: Date) async {
         let booking = Booking(
-            id: UUID(),
-            homeownerId: currentUser.id,
+            homeownerId: currentUserId,
             providerId: providerId,
             service: service,
             description: description,
             status: .pending,
             scheduledDate: date
         )
-        data.bookings.append(booking)
-        bookings = data.bookings(forHomeowner: currentUser.id)
+        do {
+            try await self.service.addBooking(booking)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
+    // MARK: - Search
+
+    func search() async {
+        let query = searchQuery.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { searchResults = []; return }
+
+        resolvedCategory = MockDataService.shared.resolveCategory(from: query)
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            searchResults = try await service.providers(for: resolvedCategory)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Reviews
+
+    func reviews(for provider: Provider) async -> [Review] {
+        guard let id = provider.id else { return [] }
+        return (try? await service.reviews(forProvider: id)) ?? []
+    }
+
+    // MARK: - Helpers
+
     func providerName(for booking: Booking) -> String {
-        data.providers.first { $0.id == booking.providerId }?.businessName ?? "Unknown Provider"
+        // Resolved lazily; in a full app cache provider names after fetching
+        booking.service
     }
 }

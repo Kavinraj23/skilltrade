@@ -78,13 +78,12 @@ struct StarRatingView: View {
 }
 
 #Preview {
-    NavigationStack {
+    let vm = HomeownerViewModel()
+    vm.searchQuery = "pipe leak"
+    vm.searchResults = MockDataService.shared.providers.filter { $0.category == .plumber }
+    vm.resolvedCategory = .plumber
+    return NavigationStack {
         SearchResultsView()
-            .environmentObject({
-                let vm = HomeownerViewModel()
-                vm.searchQuery = "pipe leak"
-                vm.search()
-                return vm
-            }())
+            .environmentObject(vm)
     }
 }

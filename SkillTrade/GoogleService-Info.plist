@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAd5W01avTpaVjvqNjCQdf__jk0EtWtVJQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>787603410595</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.kr.SkillTrade</string>
+	<key>PROJECT_ID</key>
+	<string>skilltrade-8c92c</string>
+	<key>STORAGE_BUCKET</key>
+	<string>skilltrade-8c92c.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:787603410595:ios:22b0f01b88bcd31331f916</string>
+</dict>
+</plist>

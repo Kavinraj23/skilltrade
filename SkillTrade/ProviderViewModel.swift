@@ -1,45 +1,71 @@
 import Foundation
 import Combine
+import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 final class ProviderViewModel: ObservableObject {
 
-    private let data = MockDataService.shared
-    let currentProvider: Provider
+    private let service = FirestoreService.shared
+    private var listenerHandle: ListenerRegistration?
 
-    @Published var bookings: [Booking]
+    @Published var currentProvider: Provider?
+    @Published var bookings: [Booking] = []
+    @Published var errorMessage: String?
+
+    var currentUserId: String { Auth.auth().currentUser?.uid ?? "" }
+
+    var pendingBookings: [Booking]   { bookings.filter { $0.status == .pending } }
+    var confirmedBookings: [Booking] { bookings.filter { $0.status == .confirmed } }
 
     init() {
-        // The hardcoded provider user maps to the first provider (Marco Rivera)
-        self.currentProvider = MockDataService.shared.providers[0]
-        self.bookings = MockDataService.shared.bookings(forProvider: MockDataService.shared.providers[0].id)
+        Task {
+            await loadProvider()
+            startBookingListener()
+        }
     }
 
-    var pendingBookings: [Booking] {
-        bookings.filter { $0.status == .pending }
+    deinit {
+        listenerHandle?.remove()
     }
 
-    var confirmedBookings: [Booking] {
-        bookings.filter { $0.status == .confirmed }
+    // MARK: - Provider Profile
+
+    private func loadProvider() async {
+        guard !currentUserId.isEmpty else { return }
+        currentProvider = try? await service.provider(id: currentUserId)
     }
 
-    func homeownerName(for booking: Booking) -> String {
-        // In a real app this would look up the user; for mock data the homeowner is always Alex Johnson
-        return MockDataService.shared.homeowner.name
+    // MARK: - Bookings
+
+    private func startBookingListener() {
+        guard !currentUserId.isEmpty else { return }
+        listenerHandle = service.listenToBookings(forProvider: currentUserId) { [weak self] bookings in
+            self?.bookings = bookings
+        }
     }
 
     func confirm(_ booking: Booking) {
-        update(booking, to: .confirmed)
+        updateStatus(booking, to: .confirmed)
     }
 
     func decline(_ booking: Booking) {
-        update(booking, to: .completed) // using .completed as "declined/closed" for now
+        updateStatus(booking, to: .declined)
     }
 
-    private func update(_ booking: Booking, to status: BookingStatus) {
-        if let idx = data.bookings.firstIndex(where: { $0.id == booking.id }) {
-            data.bookings[idx].status = status
+    private func updateStatus(_ booking: Booking, to status: BookingStatus) {
+        guard let id = booking.id else { return }
+        Task {
+            do {
+                try await service.updateBookingStatus(bookingId: id, status: status)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
-        bookings = data.bookings(forProvider: currentProvider.id)
+    }
+
+    func homeownerName(for booking: Booking) -> String {
+        // Placeholder — wire to a users cache once Auth is in place
+        "Homeowner"
     }
 }

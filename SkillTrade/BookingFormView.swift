@@ -45,13 +45,15 @@ struct BookingFormView: View {
 
                 Section {
                     Button {
-                        vm.addBooking(
-                            providerId: provider.id,
-                            service: selectedService,
-                            description: description,
-                            date: selectedDate
-                        )
-                        showConfirmation = true
+                        Task {
+                            await vm.addBooking(
+                                providerId: provider.id ?? "",
+                                service: selectedService,
+                                description: description,
+                                date: selectedDate
+                            )
+                            showConfirmation = true
+                        }
                     } label: {
                         Text("Submit Booking")
                             .frame(maxWidth: .infinity)

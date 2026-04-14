@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F98C059A2F8DCB2D00D98536 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = F98C05992F8DCB2500D98536 /* .gitignore */; };
 		F9A961EC2F8B097D0003F8C3 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F9A961EB2F8B097D0003F8C3 /* FirebaseAuth */; };
 		F9A961EE2F8B09840003F8C3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = F9A961ED2F8B09840003F8C3 /* FirebaseFirestore */; };
 		F9A961F02F8B09900003F8C3 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = F9A961EF2F8B09900003F8C3 /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F98C05992F8DCB2500D98536 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		F9B882AB2F876A8F0014FD7E /* SkillTrade.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkillTrade.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -48,6 +50,7 @@
 		F9B882A22F876A8F0014FD7E = {
 			isa = PBXGroup;
 			children = (
+				F98C05992F8DCB2500D98536 /* .gitignore */,
 				F9B882AD2F876A8F0014FD7E /* SkillTrade */,
 				F9A961EA2F8B097D0003F8C3 /* Frameworks */,
 				F9B882AC2F876A8F0014FD7E /* Products */,
@@ -132,6 +135,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F98C059A2F8DCB2D00D98536 /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

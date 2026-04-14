@@ -1,0 +1,25 @@
+# Claude / tooling
+.claude/
+.claire/
+
+# Firebase credentials
+GoogleService-Info.plist
+
+# Xcode
+*.plist
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+*.moved-to-trash/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Swift Package Manager
+.build/
+*.resolved
+
+# macOS
+.DS_Store

@@ -20,20 +20,66 @@ struct HomeownerTabView: View {
 struct HomeownerSearchView: View {
     @StateObject private var vm = ProvidersViewModel()
     @State private var selectedCategory: ServiceCategory? = nil
+    @State private var searchText = ""
+    @State private var isClassifying = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+
+                // AI search bar
+                HStack(spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkle.magnifyingglass")
+                            .foregroundStyle(.blue)
+                        TextField("Describe your problem...", text: $searchText)
+                            .submitLabel(.search)
+                            .onSubmit { runAISearch() }
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 9)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    if isClassifying {
+                        ProgressView().frame(width: 32)
+                    } else if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                            selectedCategory = nil
+                            vm.fetchProviders()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal).padding(.top, 8).padding(.bottom, 4)
+
+                // Matched category badge (shown after AI search)
+                if !vm.matchedCategories.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles").font(.caption).foregroundStyle(.blue)
+                        Text("Matched: \(vm.matchedCategories.map(\.rawValue).joined(separator: ", "))")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal).padding(.bottom, 4)
+                }
+
+                // Category chips (manual filter)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         CategoryChip(label: "All", icon: "square.grid.2x2",
-                                     isSelected: selectedCategory == nil) {
-                            selectedCategory = nil; vm.fetchProviders()
+                                     isSelected: selectedCategory == nil && vm.matchedCategories.isEmpty) {
+                            selectedCategory = nil
+                            searchText = ""
+                            vm.fetchProviders()
                         }
                         ForEach(ServiceCategory.allCases, id: \.self) { cat in
                             CategoryChip(label: cat.rawValue, icon: cat.icon,
                                          isSelected: selectedCategory == cat) {
                                 selectedCategory = cat
+                                searchText = ""
                                 vm.fetchProviders(service: cat.rawValue)
                             }
                         }
@@ -46,7 +92,7 @@ struct HomeownerSearchView: View {
                 } else if vm.providers.isEmpty {
                     ContentUnavailableView("No providers found",
                         systemImage: "person.slash",
-                        description: Text("Try a different category"))
+                        description: Text("Try a different category or search"))
                 } else {
                     List(vm.providers) { provider in
                         NavigationLink(destination: ProviderDetailView(provider: provider)) {
@@ -58,6 +104,17 @@ struct HomeownerSearchView: View {
             }
             .navigationTitle("Find Help")
             .onAppear { vm.fetchProviders() }
+        }
+    }
+
+    private func runAISearch() {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return }
+        selectedCategory = nil
+        isClassifying = true
+        Task {
+            await vm.fetchProviders(matchingDescription: query)
+            await MainActor.run { isClassifying = false }
         }
     }
 }

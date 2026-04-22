@@ -99,8 +99,12 @@ struct ProviderDetailView: View {
 
                 // Book button
                 Button {
-                    selectedService = provider.services.first ?? ""
-                    showBookingSheet = true
+                    if authVM.isLoggedIn {
+                        selectedService = provider.services.first ?? ""
+                        showBookingSheet = true
+                    } else {
+                        authVM.beginBookingLogin(for: provider)
+                    }
                 } label: {
                     Text("Request Booking")
                         .fontWeight(.semibold).frame(maxWidth: .infinity).padding()
@@ -139,6 +143,47 @@ struct ProviderDetailView: View {
             Button("OK") {}
         } message: {
             Text("Your request has been sent to \(provider.name).")
+        }
+    }
+}
+
+struct DeferredBookingRequestView: View {
+    let provider: Provider
+    @EnvironmentObject var authVM: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var bookingVM = BookingViewModel()
+    @State private var problemDescription = ""
+    @State private var selectedService: String
+    @State private var scheduledDate = Date().addingTimeInterval(86400)
+
+    init(provider: Provider) {
+        self.provider = provider
+        _selectedService = State(initialValue: provider.services.first ?? "")
+    }
+
+    var body: some View {
+        BookingRequestSheet(
+            provider: provider,
+            selectedService: $selectedService,
+            problemDescription: $problemDescription,
+            scheduledDate: $scheduledDate,
+            isLoading: bookingVM.isLoading
+        ) {
+            bookingVM.createBooking(
+                provider: provider,
+                serviceType: selectedService,
+                problemDescription: problemDescription,
+                scheduledDate: scheduledDate,
+                homeownerName: authVM.currentUserName
+            ) {
+                authVM.clearPendingBooking()
+                dismiss()
+            }
+        }
+        .onDisappear {
+            if !bookingVM.isLoading {
+                authVM.clearPendingBooking()
+            }
         }
     }
 }

@@ -80,6 +80,13 @@ struct AuthView: View {
                     }
                 }
             }
+            .toolbar {
+                if authVM.showAuthScreen {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Back") { authVM.cancelManualLogin() }
+                    }
+                }
+            }
         }
     }
 }
